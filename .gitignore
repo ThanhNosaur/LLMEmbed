@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+tmp/
+kaggle_experiment/runs/
+kaggle_experiment/llmembed_plusplus.zip
+.pytest_cache/
