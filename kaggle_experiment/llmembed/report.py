@@ -67,7 +67,7 @@ def make_report(output):
         if r['gate_mean']:
             fig, ax = plt.subplots(figsize=(10, 4), layout='constrained')
             ax.bar(range(7), r['gate_mean'])
-            ax.set_xticks(range(7), [name.rsplit('/', 1)[-1] for name in r['source_names']], rotation=25, ha='right')
+            ax.set_xticks(range(7), [name.replace('\\', '/').rsplit('/', 1)[-1] for name in r['source_names']], rotation=25, ha='right')
             ax.set(ylabel='Mean routing weight on test', title=f'{r["dataset"]} / {r["experiment"]} / seed {r["seed"]}')
             fig.savefig(directory / 'source_weights.png', dpi=180)
             plt.close(fig)
