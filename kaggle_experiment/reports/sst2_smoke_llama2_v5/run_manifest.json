@@ -1,0 +1,41 @@
+{
+  "run_id": "smoke_llama2_v5",
+  "dataset": "sst2",
+  "experiments": [
+    "exp0",
+    "exp1",
+    "exp2",
+    "exp3",
+    "exp4"
+  ],
+  "run_mode": "smoke",
+  "precision": "nf4",
+  "protocol": "controlled",
+  "seeds": [
+    42
+  ],
+  "epochs": 2,
+  "limit": 256,
+  "git_commit": "3863016",
+  "kaggle_kernel": "ngtunthanh/llmembed-plusplus-smoke",
+  "kaggle_version": 5,
+  "kaggle_url": "https://www.kaggle.com/code/ngtunthanh/llmembed-plusplus-smoke",
+  "status": "COMPLETE",
+  "recorded_at": "2026-11-11T21:50:25+07:00",
+  "cache_dependencies": [],
+  "artifacts": {
+    "environment": "llmembed_runs/smoke/environment.json",
+    "data_dir": "llmembed_runs/smoke/data/sst2-f073b09787908deb",
+    "features_dir": "llmembed_runs/smoke/features",
+    "results_dirs": [
+      "llmembed_runs/smoke/results/sst2-exp0-0b98ec2c33ec19c7",
+      "llmembed_runs/smoke/results/sst2-exp1-5219053cdb2070b7",
+      "llmembed_runs/smoke/results/sst2-exp2-c7e19844fb80973e",
+      "llmembed_runs/smoke/results/sst2-exp3-c3ff9a790f29135e",
+      "llmembed_runs/smoke/results/sst2-exp4-f493e842da9bdd55"
+    ],
+    "metrics_csv": "llmembed_runs/smoke/metrics.csv",
+    "ablation_csv": "llmembed_runs/smoke/ablation.csv",
+    "log": "llmembed-plusplus-smoke.log"
+  }
+}

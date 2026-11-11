@@ -1,0 +1,37 @@
+{
+  "run_id": "r8_full_nf4_v6",
+  "dataset": "r8",
+  "experiments": [
+    "exp0",
+    "exp1",
+    "exp2",
+    "exp3",
+    "exp4"
+  ],
+  "run_mode": "full",
+  "precision": "nf4",
+  "protocol": "controlled",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "epochs": 50,
+  "limit": 0,
+  "git_commit": "3863016",
+  "kaggle_kernel": "ngtunthanh/llmembed-plusplus-smoke",
+  "kaggle_version": 6,
+  "kaggle_url": "https://www.kaggle.com/code/ngtunthanh/llmembed-plusplus-smoke?scriptVersionId=368472296",
+  "status": "COMPLETE",
+  "benchmark_status": "textgcn_split_preprocessing_not_verified_against_llmembed",
+  "recorded_at": "2026-11-12T06:22:38+07:00",
+  "artifacts": {
+    "metrics_csv": "metrics.csv",
+    "ablation_csv": "ablation.csv",
+    "report_notes": "report_notes.json",
+    "local_archive": "kaggle_experiment/runs/archive/r8/full_nf4_v6",
+    "notebook": "llmembed-plusplus-smoke.ipynb",
+    "best_checkpoints": 15,
+    "results": 15
+  }
+}
