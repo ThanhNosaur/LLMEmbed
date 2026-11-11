@@ -43,6 +43,13 @@ subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', '-r', str(CODE / '
 import torch
 if not torch.cuda.is_available():
     raise RuntimeError('Bật GPU trong Settings của notebook rồi chạy lại.')
+# The previous Kaggle run loaded CPU-only bitsandbytes despite CUDA torch.
+subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', '--no-cache-dir', '--force-reinstall',
+                '--no-deps', '--index-url', 'https://pypi.org/simple', 'bitsandbytes==0.50.2'], check=True)
+subprocess.run([sys.executable, '-c',
+    'import importlib.metadata; from bitsandbytes.cextension import lib; '
+    'assert lib.compiled_with_cuda, "bitsandbytes CUDA backend unavailable"; '
+    'print("bitsandbytes:", importlib.metadata.version("bitsandbytes"))'], check=True)
 print('torch:', torch.__version__)
 print('GPUs:', [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())])
 '''), cell('code', '''# Token chỉ ở biến môi trường, không ghi vào notebook, config hay kết quả.
@@ -86,6 +93,8 @@ if DATA_DIR:
     command += ['--data-dir', DATA_DIR]
 if REUSE_CACHE:
     command += ['--reuse-cache', REUSE_CACHE]
+if not os.environ.get('HF_TOKEN') and any(experiment != 'exp5c' for experiment in EXPERIMENTS):
+    raise RuntimeError('Bật HF_TOKEN trong Add-ons → Secrets trước khi chạy LLaMA-2.')
 print(' '.join(command))
 subprocess.run(command + ['--plan'], check=True)
 '''), cell('code', '''# Tùy chọn: tiếp tục output đã lưu ở một Kaggle Dataset.
