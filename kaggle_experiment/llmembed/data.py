@@ -27,13 +27,15 @@ def write_json(path, value):
 def normalize_records(data):
     if isinstance(data, dict):
         texts, labels = data.get('text', data.get('sentence')), data.get('label')
-        if texts is None or labels is None or len(texts) != len(labels):
+        if not isinstance(texts, list) or not isinstance(labels, list) or len(texts) != len(labels):
             raise ValueError('Expected equally sized text and label arrays.')
         data = [dict(text=t, label=y) for t, y in zip(texts, labels)]
     if not isinstance(data, list) or not data:
         raise ValueError('Dataset must be a nonempty list of {text, label} records.')
     result = []
     for i, row in enumerate(data):
+        if not isinstance(row, dict):
+            raise ValueError(f'Expected an object at row {i}.')
         text, label = row.get('text', row.get('sentence')), row.get('label')
         if not isinstance(text, str) or not text.strip():
             raise ValueError(f'Empty/non-string text at row {i}.')
@@ -150,7 +152,8 @@ def prepare_data(dataset, data_dir, output_dir, limit=0, seed=42, val_fraction=0
                     val_fraction=val_fraction, limit=limit, exact_text_overlap_train_test=overlap)
     if overlap:
         warnings.warn(f'{dataset}: {overlap} test texts also occur in train; preserving the source split, recorded in manifest.')
-    metadata['fingerprint'] = digest([metadata, splits])
+    identity = dict(metadata, source='local' if source.startswith('local:') else source)
+    metadata['fingerprint'] = digest([identity, splits])
     target = Path(output_dir) / 'data' / f'{dataset}-{metadata["fingerprint"][:16]}'
     write_json(target / 'manifest.json', metadata)
     for split, rows in splits.items():

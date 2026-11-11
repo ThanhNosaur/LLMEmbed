@@ -29,7 +29,7 @@ def window_ranges(length, size, overlap, max_chunks=0):
 
 
 def make_windows(tokenizer, text, spec):
-    ids = tokenizer.encode(text, add_special_tokens=False)
+    ids = tokenizer.encode(text, add_special_tokens=False, verbose=False)
     if not ids:
         raise ValueError('Text tokenized to an empty sequence.')
     prefix, suffix = [], []
@@ -224,7 +224,11 @@ def extract_source(data, source, spec, cache_dir, reuse_cache=None, batch_size=2
     from transformers import AutoConfig, AutoModel, AutoTokenizer, BitsAndBytesConfig, __version__
     config = AutoConfig.from_pretrained(spec['model'], revision=spec['revision'], trust_remote_code=False)
     spec = dict(spec, source=source, model_commit=getattr(config, '_commit_hash', None), transformers=__version__,
-                feature_format=1, extraction_seed=42)
+                feature_format=1, extraction_seed=42,
+                implementation=digest(Path(__file__).read_text(encoding='utf-8')))
+    if Path(spec['model']).is_dir():
+        spec['local_model_files'] = {p.name: [p.stat().st_size, p.stat().st_mtime_ns]
+                                    for p in Path(spec['model']).iterdir() if p.is_file()}
     if source == 'llama':
         spec['layers'] = [config.num_hidden_layers - i * spec['stride'] for i in range(5)]
         if min(spec['layers']) < 1:
@@ -240,7 +244,10 @@ def extract_source(data, source, spec, cache_dir, reuse_cache=None, batch_size=2
     for split, rows in data['splits'].items():
         if not rows:
             continue
-        signature = dict(spec=spec, data=data['fingerprint'], split=split)
+        split_spec = dict(spec)
+        if spec['pooling'] == 'legacy_mean' and spec['task'] == 'mr' and split == 'test':
+            split_spec['max_length'] = min(1500, context)
+        signature = dict(spec=split_spec, data=data['fingerprint'], split=split)
         key = digest(signature)[:24]
         path = Path(cache_dir) / key
         if reuse_cache and (Path(reuse_cache) / key / 'state.json').exists():
@@ -253,7 +260,8 @@ def extract_source(data, source, spec, cache_dir, reuse_cache=None, batch_size=2
     if read_only:
         raise FileNotFoundError('Complete embeddings missing. Run --stage extract (with the same configuration) first.')
     torch.manual_seed(42)
-    tokenizer = AutoTokenizer.from_pretrained(spec['model'], revision=spec['revision'], trust_remote_code=False)
+    tokenizer = AutoTokenizer.from_pretrained(spec['model'], revision=spec['revision'], trust_remote_code=False,
+                                              use_fast=config.model_type not in ('deberta', 'deberta-v2'))
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
     if tokenizer.pad_token_id is None:
@@ -280,7 +288,7 @@ def extract_source(data, source, spec, cache_dir, reuse_cache=None, batch_size=2
     try:
         for split, store in stores.items():
             if not store.state['complete']:
-                extract_rows(model, tokenizer, data['splits'][split], spec, store, batch_size,
+                extract_rows(model, tokenizer, data['splits'][split], store.state['signature']['spec'], store, batch_size,
                              explain=4 if split == 'test' else 0)
     finally:
         del model
