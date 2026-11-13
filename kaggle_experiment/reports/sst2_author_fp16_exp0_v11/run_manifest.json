@@ -1,0 +1,27 @@
+{
+  "run_id": "sst2_author_fp16_exp0_v11",
+  "dataset": "sst2",
+  "experiments": ["exp0"],
+  "run_mode": "full",
+  "precision": "fp16",
+  "protocol": "author",
+  "seeds": [42],
+  "epochs": 100,
+  "limit": 0,
+  "git_commit": "3863016",
+  "kaggle_kernel": "ngtunthanh/llmembed-plusplus-smoke",
+  "kaggle_version": 11,
+  "kaggle_url": "https://www.kaggle.com/code/ngtunthanh/llmembed-plusplus-smoke?scriptVersionId=368953557",
+  "status": "COMPLETE",
+  "recorded_at": "2026-11-13T15:27:06+07:00",
+  "benchmark_status": "huggingface_train_validation",
+  "artifacts": {
+    "metrics_csv": "metrics.csv",
+    "ablation_csv": "ablation.csv",
+    "report_notes": "report_notes.json",
+    "local_archive": "kaggle_experiment/runs/archive/sst2/author_fp16_exp0_v11",
+    "notebook": "llmembed-plusplus-smoke.ipynb",
+    "best_checkpoints": 1,
+    "results": 1
+  }
+}
