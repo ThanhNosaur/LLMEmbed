@@ -42,6 +42,7 @@ LLMEmbed/
     │   ├── r8_r52_full_nf4_exp5c_v3/          # Kết quả R8 & R52 Exp 5C (Qwen2.5 + DeBERTa, NF4, 50 epochs)
     │   ├── sst2_full_nf4_exp0_2_v8/           # Kết quả SST-2 Exp 0–2 (NF4, 50 epochs, seeds 42/43/44)
     │   ├── sst2_full_nf4_exp3_4_v9/           # Kết quả SST-2 Exp 3–4 (NF4, 50 epochs, seeds 42/43/44)
+    │   ├── sst2_full_nf4_exp5b_v3/            # Kết quả SST-2 Exp 5B (LLaMA-2 + DeBERTa, NF4, 50 epochs)
     │   ├── sst2_full_nf4_exp5c_v2/            # Kết quả SST-2 Exp 5C (Qwen2.5 + DeBERTa, NF4, 50 epochs)
     │   ├── sst2_author_fp16_exp0_v11/         # Kết quả SST-2 Baseline theo protocol tác giả (FP16, 100 epochs)
     │   └── sst2_smoke_llama2_v5/              # Kết quả chạy kiểm thử vận hành (Smoke test)
@@ -73,7 +74,7 @@ Chi tiết đầy đủ nằm tại [`kaggle_experiment/reports/README.md`](kagg
 | :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | **R8** | NF4, controlled, 50 epochs, seeds `42/43/44` | 97.40% | 97.24% | 97.50% | 97.52% | 97.62% | **97.65%** | 97.50% |
 | **R52** | NF4, controlled, 50 epochs, seeds `42/43/44` | 90.11% | 87.97% | 89.23% | 89.82% | **95.61%** | 95.46% | 95.21% |
-| **SST-2** | NF4, controlled, 50 epochs, seeds `42/43/44` | 93.39% | 94.42% | 95.22% | **95.76%** | 94.80% | *(đang chạy)* | 95.22% |
+| **SST-2** | NF4, controlled, 50 epochs, seeds `42/43/44` | 93.39% | 94.42% | 95.22% | **95.76%** | 94.80% | 94.50% | 95.22% |
 | **SST-2 (Author)** | FP16, author protocol, 100 epochs, seed `42` | 93.92% | — | — | — | — | — | — |
 
 ---
