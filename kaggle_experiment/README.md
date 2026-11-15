@@ -1,6 +1,6 @@
 # LLMEmbed++: thực nghiệm trên Kaggle
 
-Triển khai bản thảo `BanThao_LLMEmbed.md`, đối chiếu Bảng 1–3 và mục Limitations của bài LLMEmbed ACL 2024. Mã gốc trong `LLMEmbed-ACL2024/`, notebook SST-2 cũ và log cũ được giữ nguyên. Notebook mới: **`llmembed_plusplus.ipynb`**.
+Triển khai thực nghiệm cho bản thảo `BanThao_LLMEmbed.md`, đối chiếu Bảng 1–3 và mục Limitations của bài báo LLMEmbed (ACL 2024). Mã nguồn gốc của nhóm tác giả được lưu tại `LLMEmbed-ACL2024/`, còn toàn bộ pipeline thực nghiệm mở rộng được đóng gói trong thư mục này và notebook độc lập **`llmembed_plusplus.ipynb`**.
 
 ## Bắt đầu trên Kaggle
 

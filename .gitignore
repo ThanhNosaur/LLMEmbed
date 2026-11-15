@@ -1,7 +1,21 @@
+# Python & Virtual Environment
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Experiment caches, artifacts, and temporary files
 tmp/
+output/
+tmp_output/
 kaggle_experiment/runs/
 kaggle_experiment/llmembed_plusplus.zip
-.pytest_cache/
+*.log
+
+# OS / Editor
+.DS_Store
+Thumbs.db
