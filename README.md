@@ -66,12 +66,12 @@ LLMEmbed/
 
 Chi tiết đầy đủ nằm tại [`kaggle_experiment/reports/README.md`](kaggle_experiment/reports/README.md):
 
-| Tập dữ liệu | Cấu hình chạy | Exp 0 | Exp 1 | Exp 2 | Exp 3 | Exp 4 (AG-CMF) |
-| :--- | :--- | ---: | ---: | ---: | ---: | ---: |
-| **R8** | NF4, controlled, 50 epochs, seeds `42/43/44` | 97.40% | 97.24% | 97.50% | 97.52% | **97.62%** |
-| **R52** | NF4, controlled, 50 epochs, seeds `42/43/44` | 90.11% | 87.97% | 89.23% | 89.82% | **95.61%** |
-| **SST-2** | NF4, controlled, 50 epochs, seeds `42/43/44` | 93.39% | 94.42% | 95.22% | **95.76%** | 94.80% |
-| **SST-2 (Author)** | FP16, author protocol, 100 epochs, seed `42` | 93.92% | — | — | — | — |
+| Tập dữ liệu | Cấu hình chạy | Exp 0 | Exp 1 | Exp 2 | Exp 3 | Exp 4 (AG-CMF) | Exp 5C (Qwen2.5 + DeBERTa) |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| **R8** | NF4, controlled, 50 epochs, seeds `42/43/44` | 97.40% | 97.24% | 97.50% | 97.52% | **97.62%** | *(đang chạy)* |
+| **R52** | NF4, controlled, 50 epochs, seeds `42/43/44` | 90.11% | 87.97% | 89.23% | 89.82% | **95.61%** | *(đang chạy)* |
+| **SST-2** | NF4, controlled, 50 epochs, seeds `42/43/44` | 93.39% | 94.42% | 95.22% | **95.76%** | 94.80% | **95.22%** |
+| **SST-2 (Author)** | FP16, author protocol, 100 epochs, seed `42` | 93.92% | — | — | — | — | — |
 
 ---
 
