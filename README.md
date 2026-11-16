@@ -75,6 +75,7 @@ Chi tiết đầy đủ nằm tại [`kaggle_experiment/reports/README.md`](kagg
 | **R8** | NF4, controlled, 50 epochs, seeds `42/43/44` | 97.40% | 97.24% | 97.50% | 97.52% | 97.62% | **97.65%** | 97.50% |
 | **R52** | NF4, controlled, 50 epochs, seeds `42/43/44` | 90.11% | 87.97% | 89.23% | 89.82% | **95.61%** | 95.46% | 95.21% |
 | **SST-2** | NF4, controlled, 50 epochs, seeds `42/43/44` | 93.39% | 94.42% | 95.22% | **95.76%** | 94.80% | 94.50% | 95.22% |
+| **MR (IMDb proxy)** | NF4, controlled, 50 epochs, seeds `42/43/44` | *(đang chạy)* | *(đang chạy)* | *(chờ)* | **96.64%** | 96.48% | *(chờ)* | *(chờ)* |
 | **SST-2 (Author)** | FP16, author protocol, 100 epochs, seed `42` | 93.92% | — | — | — | — | — | — |
 
 ---

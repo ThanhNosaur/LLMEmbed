@@ -1,0 +1,9 @@
+{
+  "accuracy_std": "Sample standard deviation across seeds; null with one seed.",
+  "delta": "Percentage points vs Exp 0, paired seeds and identical data/training settings.",
+  "extraction_seconds": "Original extraction compute for all three sources; excludes model download/load. Reused caches retain their original time.",
+  "training_seconds": "Training plus validation, excludes checkpoint serialization.",
+  "energy": "No energy measurement. Optional kWh uses user-supplied total GPU watts.",
+  "explainability": "Routing/cosine weights are diagnostics, not causal attributions or evidence of generated reasoning.",
+  "average": "Produced only with all five datasets and matching seeds. MR proxy remains explicitly identified."
+}

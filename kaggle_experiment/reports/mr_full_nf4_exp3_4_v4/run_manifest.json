@@ -1,0 +1,28 @@
+{
+  "run_id": "mr_full_nf4_exp3_4_v4",
+  "dataset": "mr",
+  "experiments": ["exp3", "exp4"],
+  "run_mode": "full",
+  "precision": "nf4",
+  "protocol": "controlled",
+  "seeds": [42, 43, 44],
+  "epochs": 50,
+  "limit": 0,
+  "mr_source": "imdb_resplit",
+  "git_commit": "93d6e04",
+  "kaggle_kernel": "ngtunthanh/llmembed-plusplus",
+  "kaggle_version": 4,
+  "kaggle_url": "https://www.kaggle.com/code/ngtunthanh/llmembed-plusplus",
+  "status": "COMPLETE",
+  "recorded_at": "2026-11-16T15:55:00+07:00",
+  "benchmark_status": "imdb_resplit_proxy_not_author_mr_split",
+  "extraction_seconds": 25449.2,
+  "artifacts": {
+    "metrics_csv": "metrics.csv",
+    "ablation_csv": "ablation.csv",
+    "report_notes": "report_notes.json",
+    "local_archive": "kaggle_experiment/runs/archive/mr/full_nf4_exp3_4_v4",
+    "notebook": "llmembed_plusplus.ipynb",
+    "results": 6
+  }
+}

@@ -7,6 +7,7 @@ These files contain observed metrics and run manifests. Large feature caches and
 | R8 full ([Exp 0–4](r8_full_nf4_v6/run_manifest.json), [Exp 5B](r8_r52_full_nf4_exp5b_v12/run_manifest.json), [Exp 5C](r8_r52_full_nf4_exp5c_v3/run_manifest.json)) | R8 | NF4, controlled, 50 epochs, seeds 42/43/44 | 97.40% | 97.24% | 97.50% | 97.52% | 97.62% | 97.65% | 97.50% |
 | R52 full ([Exp 0–4](r52_full_nf4_v7/run_manifest.json), [Exp 5B](r8_r52_full_nf4_exp5b_v12/run_manifest.json), [Exp 5C](r8_r52_full_nf4_exp5c_v3/run_manifest.json)) | R52 | NF4, controlled, 50 epochs, seeds 42/43/44 | 90.11% | 87.97% | 89.23% | 89.82% | 95.61% | 95.46% | 95.21% |
 | SST-2 full ([Exp 0–2](sst2_full_nf4_exp0_2_v8/run_manifest.json), [Exp 3–4](sst2_full_nf4_exp3_4_v9/run_manifest.json), [Exp 5B](sst2_full_nf4_exp5b_v3/run_manifest.json), [Exp 5C](sst2_full_nf4_exp5c_v2/run_manifest.json)) | SST-2 | NF4, controlled, 50 epochs, seeds 42/43/44 | 93.39% | 94.42% | 95.22% | 95.76% | 94.80% | 94.50% | 95.22% |
+| MR proxy full ([Exp 3–4](mr_full_nf4_exp3_4_v4/run_manifest.json)) | MR (IMDb resplit 40k/10k) | NF4, controlled, 50 epochs, seeds 42/43/44 | *(running)* | *(running)* | *(pending)* | 96.64% | 96.48% | *(pending)* | *(pending)* |
 | [SST-2 author baseline](sst2_author_fp16_exp0_v11/run_manifest.json) | SST-2 | FP16, author, 100 epochs, seed 42 | 93.92% | — | — | — | — | — | — |
 | [SST-2 smoke](sst2_smoke_llama2_v5/run_manifest.json) | SST-2 | NF4, controlled, 256 samples per split, 2 epochs, seed 42 | 52.73% | 55.47% | 91.02% | 90.23% | 50.00% | — | — |
 
