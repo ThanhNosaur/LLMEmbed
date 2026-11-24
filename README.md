@@ -76,9 +76,20 @@ Chi tiết đầy đủ nằm tại [`BaoCao_ThucNghiem_LLMEmbed.md`](BaoCao_Thu
 | **AGNews** | NF4, controlled, 50 ep, 3 seeds | 94.81% | **95.08%** | 95.01% | -0.07 pp |
 | **Trung bình 5 tập** | NF4, controlled, 50 ep, 3 seeds | **94.32%** | **94.96%** | **95.90%** | **+0.94 pp** |
 
-**Đối chứng mạnh trên cùng embedding FP16 (100 epochs, 3 seeds):**
-- **R52 (52 lớp):** `Exp 4 (AG-CMF)` đạt **95.81% Acc / 76.94% Macro-F1 / 50.72% Rare F1**, vượt `Matched MLP` cùng 29.02M tham số (`95.56% / 72.77% / 39.09%`), `Baseline #15` (`93.22% / 49.85% / 0.00%`), `Avg+Cat` (`91.91% / 42.54% / 0.00%`) và `#15 + Class-Weighted Loss` (`91.43% / 74.09% / 54.35%`).
-- **Ohsumed (23 lớp y khoa):** `Matched MLP` (`73.06% Acc / 66.73% Macro-F1`) và `Exp 4 (AG-CMF)` (`72.58% / 65.70%`) đều vượt xa `Baseline #15` (`69.83% / 58.08%`), `Avg+Cat` (`67.66% / 50.75%`) và `#15 + Class-Weighted Loss` (`65.45% / 59.71%`).
+### Đối chứng mạnh trên cùng embedding FP16 (100 epochs, 3 seeds `42/43/44`)
+
+| Tập dữ liệu | Cấu hình | Tham số | Accuracy | Macro-F1 | Rare F1 (`<10`) | Medium F1 (`10–49`) | Frequent F1 (`>=50`) |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| **R52** *(52 lớp)* | `exp4_ctrl_avgcat` (`Avg+Cat` #11) | 6.96M | 91.91% | 42.54% | 0.00% | 52.75% | 87.62% |
+| **R52** *(52 lớp)* | `exp3` (Baseline #15) | 25.89M | 93.22% | 49.85% | 0.00% | 68.54% | 90.34% |
+| **R52** *(52 lớp)* | `exp4_ctrl_weighted` (#15 + Weighted Loss) | 25.89M | 91.43% | 74.09% | **54.35%** | 83.41% | 86.61% |
+| **R52** *(52 lớp)* | `exp4_ctrl_mlp` (MLP cân bằng tham số) | 29.02M | 95.56% | 72.77% | 39.09% | 89.59% | **92.47%** |
+| **R52** *(52 lớp)* | **`exp4` (AG-CMF)** | 29.02M | **95.81%** | **76.94%** | 50.72% | **90.43%** | 91.53% |
+| **Ohsumed** *(23 lớp)* | `exp4_ctrl_avgcat` (`Avg+Cat` #11) | 6.96M | 67.66% | 50.75% | 0.00% | 29.91% | 63.86% |
+| **Ohsumed** *(23 lớp)* | `exp3` (Baseline #15) | 25.89M | 69.83% | 58.08% | 0.00% | 48.37% | 66.48% |
+| **Ohsumed** *(23 lớp)* | `exp4_ctrl_weighted` (#15 + Weighted Loss) | 25.89M | 65.45% | 59.71% | 11.99% | 57.77% | 63.79% |
+| **Ohsumed** *(23 lớp)* | `exp4` (AG-CMF) | 29.02M | 72.58% | 65.70% | 9.89% | 62.69% | 70.83% |
+| **Ohsumed** *(23 lớp)* | **`exp4_ctrl_mlp`** (MLP cân bằng tham số) | 29.02M | **73.06%** | **66.73%** | **20.46%** | **64.31%** | **70.95%** |
 
 ---
 
