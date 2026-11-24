@@ -16,7 +16,9 @@ from .train import train_run
 def parser():
     p = argparse.ArgumentParser(description='LLMEmbed++ Exp 0-5, with resumable extraction and classifier training.')
     p.add_argument('--datasets', nargs='+', choices=EXPECTED, default=['sst2'])
-    p.add_argument('--experiments', nargs='+', choices=['exp0', 'exp1', 'exp2', 'exp3', 'exp4', 'exp5b', 'exp5c'],
+    p.add_argument('--experiments', nargs='+',
+                   choices=['exp0', 'exp1', 'exp2', 'exp3', 'exp4', 'exp5b', 'exp5c',
+                            'exp4_ctrl_avgcat', 'exp4_ctrl_mlp', 'exp4_ctrl_weighted'],
                    default=['exp0', 'exp1', 'exp2', 'exp3', 'exp4'])
     p.add_argument('--output', type=Path, default=Path('runs'))
     p.add_argument('--data-dir', type=Path)
@@ -62,9 +64,16 @@ def parser():
 def experiment_matrix(args):
     experiments = []
     for name in args.experiments:
+        is_ctrl = name.startswith('exp4_ctrl_')
+        fusion_type = 'mlp' if name == 'exp4_ctrl_mlp' else 'adaptive' if name in ('exp4', 'exp5b', 'exp5c') else 'baseline'
+        fusion_id = 11 if name == 'exp4_ctrl_avgcat' else 15 if name == 'exp4_ctrl_weighted' else args.fusion
         experiments.append(dict(name=name, stride=1 if name == 'exp0' else args.stride,
-            cot=name not in ('exp0', 'exp1'), chunked=name in ('exp3', 'exp4', 'exp5b', 'exp5c'),
-            adaptive=name in ('exp4', 'exp5b', 'exp5c'), fusion=args.fusion,
+            cot=name not in ('exp0', 'exp1'),
+            chunked=is_ctrl or name in ('exp3', 'exp4', 'exp5b', 'exp5c'),
+            adaptive=name in ('exp4', 'exp5b', 'exp5c'),
+            fusion_type=fusion_type,
+            class_weighted=name == 'exp4_ctrl_weighted',
+            fusion=fusion_id,
             llama=args.next_model if name == 'exp5c' else args.llama_model,
             bert=args.deberta_model if name in ('exp5b', 'exp5c') else args.bert_model,
             roberta=args.roberta_model))
@@ -80,7 +89,7 @@ def experiment_matrix(args):
 
 
 def extraction_spec(args, dataset, experiment, source):
-    llama_lengths = {'sst2': 128, 'mr': 3000, 'agnews': 256, 'r8': 1024, 'r52': 1024}
+    llama_lengths = {'sst2': 128, 'mr': 3000, 'agnews': 256, 'r8': 1024, 'r52': 1024, 'ohsumed': 1024}
     is_llama = source == 'llama'
     if is_llama:
         pooling = 'cot' if experiment['cot'] else 'legacy_mean' if args.protocol == 'author' else 'mean'

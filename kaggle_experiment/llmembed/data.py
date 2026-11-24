@@ -8,7 +8,8 @@ import warnings
 import numpy as np
 
 EXPECTED = {'sst2': (67349, 872, 2), 'mr': (40000, 10000, 2),
-            'agnews': (120000, 7600, 4), 'r8': (5485, 2189, 8), 'r52': (6532, 2568, 52)}
+            'agnews': (120000, 7600, 4), 'r8': (5485, 2189, 8), 'r52': (6532, 2568, 52),
+            'ohsumed': (3357, 4043, 23)}
 TEXTGCN_COMMIT = '962223652e9bb164ac2d83cd09fc7b8845ce860b'
 
 
@@ -86,10 +87,11 @@ def load_raw(dataset, data_dir, download_dir, mr_source):
             path = local / f'{split}.jsonl'
             return normalize_records([json.loads(s) for s in path.read_text(encoding='utf-8').splitlines() if s.strip()])
         return read('train'), read('test'), f'local:{local.resolve()}', 'local_split_unverified'
-    if dataset in ('r8', 'r52'):
+    if dataset in ('r8', 'r52', 'ohsumed'):
         base = f'https://raw.githubusercontent.com/yao8839836/text_gcn/{TEXTGCN_COMMIT}/data/'
+        stem = 'ohsumed' if dataset == 'ohsumed' else dataset.upper()
         parts = []
-        for filename in (f'{dataset.upper()}.txt', f'corpus/{dataset.upper()}.txt'):
+        for filename in (f'{stem}.txt', f'corpus/{stem}.txt'):
             target = Path(download_dir) / filename
             if not target.exists():
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -105,9 +107,10 @@ def load_raw(dataset, data_dir, download_dir, mr_source):
         splits = {'train': [], 'test': []}
         for meta, text in zip(metadata, texts):
             _, split, label = meta.split('\t')
-            splits[split].append(dict(text=text, label=label))
-        return (normalize_records(splits['train']), normalize_records(splits['test']),
-                base, 'textgcn_split_preprocessing_not_verified_against_llmembed')
+            key = 'train' if split in ('train', 'training') else 'test'
+            splits[key].append(dict(text=text, label=label))
+        status = 'textgcn_ohsumed_split' if dataset == 'ohsumed' else 'textgcn_split_preprocessing_not_verified_against_llmembed'
+        return normalize_records(splits['train']), normalize_records(splits['test']), base, status
     from datasets import load_dataset
     if dataset == 'mr':
         if mr_source != 'imdb_resplit':

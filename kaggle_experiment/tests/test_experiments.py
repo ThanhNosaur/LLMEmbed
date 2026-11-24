@@ -238,5 +238,45 @@ class PipelineTests(unittest.TestCase):
                 torch.testing.assert_close(tensor, uninterrupted['model'][key])
 
 
+class ControlExperimentsTests(unittest.TestCase):
+    def test_matched_mlp_parameter_count_and_backward(self):
+        adaptive = ExperimentModel(52, (4096, 1024, 1024), chunked=True, adaptive=True, hidden=1024, heads=8)
+        mlp = ExperimentModel(52, (4096, 1024, 1024), chunked=True, fusion_type='mlp', hidden=1024)
+        p_adaptive = sum(p.numel() for p in adaptive.parameters())
+        p_mlp = sum(p.numel() for p in mlp.parameters())
+        self.assertLess(abs(p_mlp - p_adaptive) / p_adaptive, 0.005)
+        small = ExperimentModel(4, (12, 8, 8), chunked=True, fusion_type='mlp', hidden=8)
+        feats = [torch.randn(2, 2, 5, 12), torch.randn(2, 2, 1, 8), torch.randn(2, 2, 1, 8)]
+        masks = [torch.ones(2, 2, dtype=torch.bool) for _ in range(3)]
+        logits, gate, _ = small(feats, masks)
+        self.assertIsNone(gate)
+        self.assertEqual(logits.shape, (2, 4))
+        logits.sum().backward()
+
+    def test_class_weights_and_frequency_buckets(self):
+        from llmembed.train import compute_class_weights, frequency_bucket_f1
+        train_labels = [0] * 60 + [1] * 20 + [2] * 4
+        weights = compute_class_weights(train_labels, 3)
+        self.assertAlmostEqual(weights.mean().item(), 1.0, places=5)
+        self.assertGreater(weights[2].item(), weights[1].item())
+        self.assertGreater(weights[1].item(), weights[0].item())
+        buckets = frequency_bucket_f1([0, 1, 2], [0, 1, 0], train_labels, 3)
+        self.assertEqual(buckets['rare_macro_f1'], 0.0)
+        self.assertEqual(buckets['medium_macro_f1'], 1.0)
+        self.assertGreater(buckets['frequent_macro_f1'], 0.0)
+
+    def test_controls_share_exact_extraction_spec_with_exp4(self):
+        args = parser().parse_args(['--datasets', 'r52', '--experiments',
+                                    'exp4', 'exp4_ctrl_avgcat', 'exp4_ctrl_mlp', 'exp4_ctrl_weighted'])
+        exps = {e['name']: e for e in experiment_matrix(args)}
+        for ctrl in ('exp4_ctrl_avgcat', 'exp4_ctrl_mlp', 'exp4_ctrl_weighted'):
+            for src in ('llama', 'bert', 'roberta'):
+                self.assertEqual(extraction_spec(args, 'r52', exps['exp4'], src),
+                                 extraction_spec(args, 'r52', exps[ctrl], src))
+        self.assertEqual(exps['exp4_ctrl_avgcat']['fusion'], 11)
+        self.assertEqual(exps['exp4_ctrl_mlp']['fusion_type'], 'mlp')
+        self.assertTrue(exps['exp4_ctrl_weighted']['class_weighted'])
+
+
 if __name__ == '__main__':
     unittest.main()

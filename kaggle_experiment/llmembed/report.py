@@ -39,11 +39,17 @@ def make_report(output):
         baseline = [r for r in records if r['comparison_key'] == key and r['dataset'] == dataset and r['experiment'] == 'exp0']
         seeds = {r['seed']: r['metrics']['accuracy'] for r in baseline}
         paired = [r['metrics']['accuracy'] - seeds[r['seed']] for r in group if r['seed'] in seeds]
+        def mean_optional(field):
+            vals = [r['metrics'].get(field) for r in group if r['metrics'].get(field) is not None]
+            return statistics.mean(vals) if vals else None
         summaries.append(dict(dataset=dataset, experiment=name, comparison_key=key, run_group=run_group, study_key=group[0]['study_key'],
             benchmark_status=group[0]['benchmark_status'], sample_limit=group[0]['sample_limit'],
             precision=group[0]['precision'], seeds=';'.join(str(r['seed']) for r in group), n_seeds=len(values),
             accuracy_mean=statistics.mean(values), accuracy_std=statistics.stdev(values) if len(values) > 1 else None,
             macro_f1_mean=statistics.mean(r['metrics']['macro_f1'] for r in group),
+            rare_macro_f1_mean=mean_optional('rare_macro_f1'),
+            medium_macro_f1_mean=mean_optional('medium_macro_f1'),
+            frequent_macro_f1_mean=mean_optional('frequent_macro_f1'),
             delta_exp0_pp=100 * statistics.mean(paired) if len(paired) == len(group) and len(seeds) == len(baseline) else None,
             extraction_seconds=group[0]['extraction_seconds'],
             training_seconds_mean=statistics.mean(r['training_seconds'] for r in group)))
@@ -52,12 +58,14 @@ def make_report(output):
     by_study = defaultdict(list)
     for row in summaries:
         by_study[row['study_key'], row['experiment']].append(row)
+    core_five = {'sst2', 'mr', 'agnews', 'r8', 'r52'}
     for (study, experiment), group in by_study.items():
-        if len(group) == 5 and {r['dataset'] for r in group} == set(EXPECTED) and len({r['seeds'] for r in group}) == 1:
+        core = [r for r in group if r['dataset'] in core_five]
+        if len(core) == 5 and {r['dataset'] for r in core} == core_five and len({r['seeds'] for r in core}) == 1:
             averages.append(dict(study_key=study, experiment=experiment,
-                avg5_accuracy=statistics.mean(r['accuracy_mean'] for r in group),
-                dataset_protocols='; '.join(f'{r["dataset"]}:{r["benchmark_status"]}' for r in group),
-                sample_limit=group[0]['sample_limit'], precision=group[0]['precision']))
+                avg5_accuracy=statistics.mean(r['accuracy_mean'] for r in core),
+                dataset_protocols='; '.join(f'{r["dataset"]}:{r["benchmark_status"]}' for r in core),
+                sample_limit=core[0]['sample_limit'], precision=core[0]['precision']))
     write_csv(output / 'average_five_datasets.csv', averages)
     import matplotlib
     matplotlib.use('Agg')

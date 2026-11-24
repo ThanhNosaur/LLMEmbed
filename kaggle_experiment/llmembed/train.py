@@ -59,6 +59,29 @@ def to_device(batch, device):
     return [x.to(device) for x in features], [x.to(device) for x in masks], labels.to(device)
 
 
+def compute_class_weights(train_labels, classes):
+    counts = np.bincount(train_labels, minlength=classes).astype(np.float64)
+    present = counts > 0
+    weights = np.zeros(classes, dtype=np.float64)
+    if present.any():
+        inv = np.zeros(classes, dtype=np.float64)
+        inv[present] = 1.0 / counts[present]
+        weights[present] = inv[present] / inv[present].mean()
+    return torch.tensor(weights, dtype=torch.float32)
+
+
+def frequency_bucket_f1(labels, predictions, train_labels, classes):
+    counts = np.bincount(train_labels, minlength=classes)
+    per_class = f1_score(labels, predictions, labels=list(range(classes)), average=None, zero_division=0)
+    buckets = {
+        'rare_macro_f1': [c for c in range(classes) if 0 < counts[c] < 10],
+        'medium_macro_f1': [c for c in range(classes) if 10 <= counts[c] < 50],
+        'frequent_macro_f1': [c for c in range(classes) if counts[c] >= 50],
+    }
+    return {name: (float(np.mean([per_class[c] for c in idxs])) if idxs else None)
+            for name, idxs in buckets.items()}
+
+
 @torch.inference_mode()
 def evaluate(model, loader, device, classes):
     model.eval()
@@ -104,7 +127,11 @@ def train_run(data, caches, experiment, config, output_dir):
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     author = config['protocol'] == 'author'
     model = ExperimentModel(classes, dims, chunked=experiment['chunked'], adaptive=experiment['adaptive'],
-        strategy=experiment['fusion'], hidden=config['hidden'], heads=config['heads'], sigma=config['sigma'], author=author).to(device)
+        strategy=experiment['fusion'], hidden=config['hidden'], heads=config['heads'], sigma=config['sigma'],
+        author=author, fusion_type=experiment.get('fusion_type')).to(device)
+    train_labels = [r['label'] for r in data['splits']['train']]
+    class_weights = (compute_class_weights(train_labels, classes).to(device)
+                     if experiment.get('class_weighted') else None)
     optimizer = (torch.optim.Adam(model.parameters(), lr=config['lr']) if author else
                  torch.optim.AdamW(model.parameters(), lr=config['lr'], weight_decay=config['weight_decay']))
     scheduler = None if author else torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, config['epochs'])
@@ -144,7 +171,7 @@ def train_run(data, caches, experiment, config, output_dir):
             if seen % effective == 0:
                 group_size = min(effective, len(datasets['train']) - seen)
             logits, _, _ = model(features, masks)
-            loss = nn.functional.cross_entropy(logits, labels, reduction='sum')
+            loss = nn.functional.cross_entropy(logits, labels, weight=class_weights, reduction='sum')
             if not torch.isfinite(loss):
                 raise FloatingPointError('Non-finite training loss; cached data/checkpoint preserved.')
             (loss / group_size).backward()
@@ -175,6 +202,8 @@ def train_run(data, caches, experiment, config, output_dir):
     test_loader = DataLoader(datasets['test'], batch_size=batch_size, collate_fn=collate)
     started = time.perf_counter()
     metrics, predictions, gate_mean, chunks = evaluate(model, test_loader, device, classes)
+    test_labels = [r['label'] for r in data['splits']['test']]
+    metrics.update(frequency_bucket_f1(test_labels, predictions, train_labels, classes))
     if device.type == 'cuda':
         torch.cuda.synchronize()
     inference_seconds = time.perf_counter() - started

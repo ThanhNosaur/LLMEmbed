@@ -76,6 +76,30 @@ class AdaptiveFusion(nn.Module):
         return self.classifier(torch.cat([pooled, interaction], -1)), weights.squeeze(-1)
 
 
+class MatchedMLPFusion(nn.Module):
+    def __init__(self, classes, dims=(4096, 1024, 1024), hidden=1024):
+        super().__init__()
+        in_dim = 5 * dims[0] + dims[1] + dims[2]
+        mid1 = max(hidden, int(round(hidden * 1.212)))
+        mid2 = max(1, hidden // 2)
+        self.net = nn.Sequential(
+            nn.Dropout(0.2),
+            nn.Linear(in_dim, mid1),
+            nn.GELU(),
+            nn.LayerNorm(mid1),
+            nn.Dropout(0.2),
+            nn.Linear(mid1, mid2),
+            nn.GELU(),
+            nn.LayerNorm(mid2),
+            nn.Dropout(0.2),
+            nn.Linear(mid2, classes),
+        )
+
+    def forward(self, llama, bert, roberta):
+        x = torch.cat([llama.flatten(1), bert, roberta], dim=-1)
+        return self.net(x), None
+
+
 class ChunkPool(nn.Module):
     def __init__(self, dim):
         super().__init__()
@@ -97,12 +121,20 @@ class ChunkPool(nn.Module):
 
 
 class ExperimentModel(nn.Module):
-    def __init__(self, classes, dims, chunked=False, adaptive=False, strategy=15, hidden=1024, heads=8, sigma=0.1, author=False):
+    def __init__(self, classes, dims, chunked=False, adaptive=False, strategy=15, hidden=1024, heads=8, sigma=0.1,
+                 author=False, fusion_type=None):
         super().__init__()
         self.chunked = chunked
         self.pools = nn.ModuleList([ChunkPool(dim) for dim in dims]) if chunked else nn.ModuleList()
-        self.fusion = (AdaptiveFusion(classes, dims, hidden, heads, sigma) if adaptive else
-                       BaselineFusion(classes, dims, strategy, hidden, sigma, author))
+        kind = fusion_type or ('adaptive' if adaptive else 'baseline')
+        if kind == 'adaptive':
+            self.fusion = AdaptiveFusion(classes, dims, hidden, heads, sigma)
+        elif kind == 'mlp':
+            self.fusion = MatchedMLPFusion(classes, dims, hidden)
+        elif kind == 'baseline':
+            self.fusion = BaselineFusion(classes, dims, strategy, hidden, sigma, author)
+        else:
+            raise ValueError(f'Unknown fusion_type: {kind}')
 
     def forward(self, features, masks):
         if self.chunked:
