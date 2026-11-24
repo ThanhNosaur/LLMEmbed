@@ -6,13 +6,13 @@
 
 ---
 
-## 1. Mục tiêu Nghiên cứu & Giả thuyết Khoa học
+## 1. Mục tiêu Nghiên cứu, Phạm vi Đóng góp & Giả thuyết Khoa học
 
-Bản thảo thực nghiệm này được thiết kế nhằm giải quyết triệt để **3 điểm nghẽn thực nghiệm** và **2 hạn chế (Limitations)** mà nhóm tác giả bài báo gốc đã nêu ở trang 9:
+Dựa trên kết quả thực nghiệm có kiểm soát (35/35 cấu hình trên 5 tập chuẩn + đối chứng mạnh trên `R52` và `Ohsumed`), tuyên bố đóng góp chính của nghiên cứu được **thu hẹp chặt chẽ** vào:
 
-1. **Khắc phục hạn chế về tính giải thích và suy luận (Limitation 2 - Explainability & CoT):** Thay thế phép lấy trung bình token tĩnh (Static Mean Token Pooling) trên kiến trúc tự hồi quy một chiều (Causal Mask) của LLaMA2 bằng **CoT-Guided PromptEOL** kết hợp **Learnable Token-Level Attention Pooling**. Giải pháp này vừa kích hoạt tư duy suy luận trong $1$ lượt chạy (single forward pass), vừa trích xuất được trọng số chú ý (attention weights) trên từng từ để giải thích quyết định phân loại.
-2. **Khắc phục điểm nghẽn văn bản dài (Limitation 1 - Long-Text Bottleneck):** Trên các tập dữ liệu dài như MR (độ dài tối đa $2470$ từ), R8 ($964$ từ) và R52 ($1039$ từ), BERT và RoBERTa bị cắt cụt (truncation) ở ngưỡng $512$ tokens, trong khi LLaMA2 tốn tới $05\text{h}:43\text{m}:45\text{s}$ trích xuất tập MR do độ phức tạp bậc hai $\mathcal{O}(L^2)$. Chúng ta áp dụng cơ chế **Hierarchical Chunk-and-Fuse** để giữ $100\%$ thông tin văn bản và tăng tốc độ trích xuất lên gấp $8\text{--}10$ lần.
-3. **Khắc phục hiện tượng suy giảm hiệu năng khi trộn đặc trưng (Fusion Bottleneck):** Thay thế phép lấy trung bình tầng liền kề $\{28, 29, 30, 31, 32\}$ và phép nhân ma trận tĩnh `Co-occurrence Pooling` bằng **Strided Multi-Depth Extraction** ($\{16, 20, 24, 28, 32\}$) kết hợp **Adaptive Gated Cross-Attention Fusion (MoE Gate)**, giúp loại bỏ hoàn toàn hiện tượng sụp đổ mô hình trên tập R52 ($52$ nhãn) và đẩy độ chính xác trung bình vượt mốc $0.9620$.
+1. **Phân tích và khắc phục nút thắt trộn đặc trưng (Fusion Bottleneck) trên phân loại văn bản mất cân bằng / lớp ít mẫu:** Trên các tập nhiều lớp lệch phân bố như `R52` (52 nhãn) và `Ohsumed` (23 nhãn y khoa), đầu trộn `Cat + Co + Avg + Cat` (#15) của LLMEmbed gốc (nén tương tác qua ma trận Gram 49 chiều + Dropout 0.5) làm sụp hoàn toàn nhóm lớp hiếm (`Rare F1 = 0.00%`). Thay bằng đầu hợp nhất giàu dung lượng có `LayerNorm + GELU + Dropout 0.2` (`Matched MLP` hoặc `AG-CMF`) nâng `Macro-F1` tăng mạnh trên cả `R52` (`+22.9` đến `+27.1 pp`) lẫn `Ohsumed` (`+7.6` đến `+8.7 pp`) mà không gây đánh đổi Accuracy như `class-weighted loss`.
+2. **Tách bạch lợi ích riêng của Fusion Thích nghi (`AG-CMF`) trước các đối chứng mạnh:** Khi giữ cố định 100% cùng bộ embedding FP16 và cân bằng số tham số (~29.02M), cơ chế self-attention + gating của `AG-CMF` cho lợi ích bổ sung rõ rệt trên bài toán nhiều lớp cực lệch như `R52` (`+4.16 pp` Macro-F1 và `+11.63 pp` Rare F1 so với `Matched MLP`), trong khi trên `Ohsumed` (23 lớp, chỉ 1 lớp `<10` mẫu) `Matched MLP` nhỉnh hơn nhẹ (`+1.03 pp` Macro-F1).
+3. **Ngoài phạm vi tuyên bố chính (Explicitly Out of Scope):** Các thực nghiệm hiện tại **không** khẳng định suy luận CoT thực thụ, khả năng giải thích nhân quả (trọng số attention/gate chỉ là công cụ chẩn đoán), vượt SOTA toàn diện trên A100 FP16, hay tiết kiệm điện năng đo trực tiếp. Tập `MR` trong thực nghiệm dùng proxy IMDb 40k/10k nên không so trực tiếp 1-1 với split MR gốc của bài báo.
 
 ---
 
@@ -301,63 +301,46 @@ class AdaptiveGatedCrossModelFusion(nn.Module):
 
 ---
 
-## 4. Hệ Thống Bảng Biểu Đánh Giá (Dùng Cho Bài Báo Của Bạn)
+## 4. Kết Quả Thực Nghiệm Đã Ghi Nhận (Observed Results)
 
-Khi chạy xong các thực nghiệm trên, bạn hãy tổng hợp số liệu vào 4 bảng chuẩn ACL dưới đây:
+Toàn bộ số liệu dưới đây là **kết quả đo thực tế** trên Kaggle GPU (`Tesla T4 × 2`), trung bình qua **3 seeds (`42, 43, 44`)** (chi tiết tại `kaggle_experiment/reports/README.md`).
 
-### Bảng 1: So sánh Độ chính xác (Accuracy) Tổng thể trên 5 Bộ dữ liệu Chuẩn
-*(Số liệu của các đối thủ và LLMEmbed gốc được trích từ Bảng 2 bài báo gốc; hàng cuối cùng là mục tiêu kỳ vọng của bạn)*
+### Bảng 1: Ablation Study Đầy Đủ 35/35 (`NF4`, `controlled`, 50 epochs, 3 seeds)
 
-| Phương pháp (Method) | Backbone chính | SST-2 | MR | AGNews | R8 | R52 | Avg. Acc. |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **PLM Baselines** | | | | | | | |
-| BERT-large (Kenton et al., 2019) | BERT-large | $0.8761$ | $0.8130$ | $0.8216$ | $0.8250$ | $0.6581$ | $0.7988$ |
-| RoBERTa-large (Liu et al., 2019) | RoBERTa-large | $0.9025$ | $0.9441$ | $0.9346$ | $0.9676$ | $0.4217$ | $0.8341$ |
-| **Prompt-based LLM Baselines** | | | | | | | |
-| IO Prompting (Brown et al., 2020) | LLaMA2-7B | $0.8922$ | $0.7420$ | $0.9065$ | $0.2481$ | $0.1869$ | $0.5951$ |
-| CARP (Sun et al., 2023) | LLaMA2-7B | $0.8842$ | $0.8394$ | $0.8518$ | $0.7510$ | $0.7305$ | $0.8114$ |
-| CARP (Sun et al., 2023) *(Online 175B)* | GPT-3 175B | $0.9569$ | $0.9074$ | $0.9525$ | $0.9783$ | $0.9627$ | $0.9516$ |
-| **LLMEmbed Baselines (Liu et al., 2024)** | | | | | | | |
-| LLMEmbed (`Cat` only) | LLaMA2-7B + PLMs | $0.9484$ | $0.9505$ | $0.9540$ | $0.9785$ | $0.9326$ | $0.9528$ |
-| LLMEmbed (`Cat + Co`) | LLaMA2-7B + PLMs | $0.9553$ | $0.9549$ | $0.9533$ | $0.9794$ | $0.8895$ | $0.9465$ |
-| LLMEmbed (`Avg + Cat`) | LLaMA2-7B + PLMs | $0.9553$ | $0.9534$ | $0.9574$ | $0.9808$ | $0.9548$ | $0.9603$ |
-| LLMEmbed SOTA (`Cat + Co + Avg + Cat`) | LLaMA2-7B + PLMs | $0.9576$ | $0.9549$ | $0.9583$ | $0.9822$ | $0.9568$ | $0.9620$ |
-| **Phương pháp Đề xuất (Ours)** | | | | | | | |
-| **LLMEmbed++ (Standard Backbones)** | LLaMA2-7B + PLMs | **[Điền]** | **[Điền]** | **[Điền]** | **[Điền]** | **[Điền]** | **[Mục tiêu $> 0.968$]** |
-| **LLMEmbed++ (Next-Gen Backbones)** | Llama-3-8B + DeBERTa | **[Điền]** | **[Điền]** | **[Điền]** | **[Điền]** | **[Điền]** | **[Mục tiêu $> 0.973$]** |
-
----
-
-### Bảng 2: Nghiên cứu Loại bỏ Từng Thành phần (Ablation Study trên LLaMA2-7B + BERT + RoBERTa)
-*(Bảng này chứng minh mỗi cải tiến từ Exp 1 đến Exp 4 đều đóng góp tích cực vào kết quả cuối cùng)*
-
-| ID | Cấu hình Thực nghiệm | SST-2 | MR (Dài) | AGNews | R8 (Dài) | R52 (52 nhãn) | Avg. Acc. | $\Delta$ so với Baseline |
+| ID | Cấu hình Thực nghiệm | SST-2 | MR *(IMDb proxy)* | AGNews | R8 | R52 | Avg. 5 tập | $\Delta$ vs Exp 0 |
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Exp 0** | Baseline LLMEmbed gốc ($\{28..32\}$, Mean Pool, `Cat+Co+Avg+Cat`) | $0.9576$ | $0.9549$ | $0.9583$ | $0.9822$ | $0.9568$ | $0.9620$ | $-$ |
-| **Exp 1** | $+$ Strided Multi-Depth Layers ($\{16, 20, 24, 28, 32\}$) | [Điền] | [Điền] | [Điền] | [Điền] | [Điền] | [Điền] | $+[\text{Điền}]\%$ |
-| **Exp 2** | $+$ CoT-Guided PromptEOL & Token Attention Pooling | [Điền] | [Điền] | [Điền] | [Điền] | [Điền] | [Điền] | $+[\text{Điền}]\%$ |
-| **Exp 3** | $+$ Hierarchical Chunk-and-Fuse (Xử lý văn bản dài $> 256$ từ) | [Điền] | [Điền] | [Điền] | [Điền] | [Điền] | [Điền] | $+[\text{Điền}]\%$ |
-| **Exp 4** | $+$ Adaptive Gated Cross-Model Fusion (`AG-CMF`) | **[Điền]** | **[Điền]** | **[Điền]** | **[Điền]** | **[Điền]** | **[Điền]** | **$+[\text{Điền}]\%$** |
+| **Exp 0** | Baseline NF4 ($\{28..32\}$, Mean Pool, `#15`) | 93.39% | 95.88% | 94.81% | 97.40% | 90.11% | 94.32% | — |
+| **Exp 1** | $+$ Strided Multi-Depth ($\{16, 20, 24, 28, 32\}$) | 94.42% | 96.20% | 94.87% | 97.24% | 87.97% | 94.14% | -0.18 pp |
+| **Exp 2** | $+$ CoT Prompt & Cosine Anchor Pooling | 95.22% | **96.96%** | 94.93% | 97.50% | 89.23% | 94.77% | +0.45 pp |
+| **Exp 3** | $+$ Hierarchical Chunking + Learned ChunkPool | **95.76%** | 96.64% | **95.08%** | 97.52% | 89.82% | 94.96% | +0.64 pp |
+| **Exp 4** | $+$ Adaptive Gated Cross-Model Fusion (`AG-CMF`) | 94.80% | 96.48% | 95.01% | 97.62% | **95.61%** | **95.90%** | **+1.58 pp** |
+| **Exp 5B** | `AG-CMF` + DeBERTa-v3-large (thay BERT) | 94.50% | 96.62% | 95.01% | **97.65%** | 95.46% | 95.85% | +1.53 pp |
+| **Exp 5C** | `AG-CMF` + Qwen2.5-7B + DeBERTa-v3-large | 95.22% | 96.61% | 94.86% | 97.50% | 95.21% | 95.88% | +1.56 pp |
+
+*(Tham chiếu: bài báo LLMEmbed ACL 2024 báo cáo cấu hình #15 trên A100 FP16, 100 epochs đạt SST-2 `95.76%`, MR gốc `95.49%`, AGNews `95.83%`, R8 `98.22%`, R52 `95.68%`, trung bình `96.20%`. Chạy lại bản `FP16 + 100 epochs` của `Exp 4` trên T4 đạt R52 **`95.81%`** (+0.13 pp vs bài báo), R8 `97.61%`, SST-2 `95.57%`.)*
 
 ---
 
-### Bảng 3: Đánh giá Hiệu quả Thời gian & Điện năng trên Tập Văn bản Dài (MR & R52)
-*(Bảng này chứng minh Exp 3 giải quyết thành công điểm nghẽn $06\text{h}:22\text{m}:21\text{s}$ của tập MR trong Bảng 3 bài báo gốc)*
+### Bảng 2: Đối Chứng Mạnh trên Dữ Liệu Mất Cân Bằng (Cùng Bộ Embedding FP16, 100 epochs, 3 seeds)
 
-| Phương pháp | Tập dữ liệu | Thời gian Rút trích Embedding | Thời gian Train Classifier (50 epochs) | Tổng Thời gian Chạy | Điện năng Tiêu thụ ($\text{kWh}$) | Tỷ lệ Token Văn bản được Giữ lại |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| CARP (Prompt-based) | MR | $00\text{h}:15\text{m}:34\text{s}$ (KNN) | $42\text{h}:52\text{m}:27\text{s}$ (Clues) | $181\text{h}:33\text{m}:06\text{s}$ | $33.65\text{ kWh}$ | Bị cắt nếu vượt context |
-| LLMEmbed (Bài báo gốc) | MR | $06\text{h}:17\text{m}:06\text{s}$ | $00\text{h}:05\text{m}:13\text{s}$ | $06\text{h}:22\text{m}:21\text{s}$ | $1.51\text{ kWh}$ | BERT/RoBERTa mất $> 60\%$ ở câu dài |
-| **LLMEmbed++ (Exp 3 Chunking)** | **MR** | **[Mục tiêu $< 00\text{h}:45\text{m}$]** | **[Điền]** | **[Mục tiêu $< 00\text{h}:52\text{m}$]** | **[Mục tiêu $< 0.25\text{ kWh}$]** | **$100\%$ (Không bị cắt cụt)** |
+Cả 5 đầu phân loại dùng chung 100% cùng bộ embedding FP16, cùng split train/val/test, cùng 3 seeds và cùng tiêu chí chọn checkpoint theo `val_accuracy`. Nhóm tần suất lớp được chốt trước theo số mẫu train: `Rare (<10)`, `Medium (10–49)`, `Frequent (>=50)`.
 
----
+| Tập dữ liệu | Cấu hình | Tham số | Accuracy | Macro-F1 | Rare F1 (`<10`) | Medium F1 (`10–49`) | Frequent F1 (`>=50`) |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| **R52** *(52 lớp)* | `exp4_ctrl_avgcat` (`Avg+Cat` #11) | 6.96M | 91.91% ± 0.08% | 42.54% | 0.00% | 52.75% | 87.62% |
+| **R52** *(52 lớp)* | `exp3` (Baseline #15) | 25.89M | 93.22% ± 0.04% | 49.85% | 0.00% | 68.54% | 90.34% |
+| **R52** *(52 lớp)* | `exp4_ctrl_weighted` (#15 + Class-Weighted Loss) | 25.89M | 91.43% ± 0.38% | 74.09% | **54.35%** | 83.41% | 86.61% |
+| **R52** *(52 lớp)* | `exp4_ctrl_mlp` (MLP cân bằng tham số) | 29.02M | 95.56% ± 0.04% | 72.77% | 39.09% | 89.59% | **92.47%** |
+| **R52** *(52 lớp)* | **`exp4` (AG-CMF)** | 29.02M | **95.81%** ± 0.21% | **76.94%** | 50.72% | **90.43%** | 91.53% |
+| **Ohsumed** *(23 lớp)* | `exp4_ctrl_avgcat` (`Avg+Cat` #11) | 6.96M | 67.66% ± 2.07% | 50.75% | 0.00% | 29.91% | 63.86% |
+| **Ohsumed** *(23 lớp)* | `exp3` (Baseline #15) | 25.89M | 69.83% ± 0.56% | 58.08% | 0.00% | 48.37% | 66.48% |
+| **Ohsumed** *(23 lớp)* | `exp4_ctrl_weighted` (#15 + Class-Weighted Loss) | 25.89M | 65.45% ± 0.35% | 59.71% | 11.99% | 57.77% | 63.79% |
+| **Ohsumed** *(23 lớp)* | `exp4` (AG-CMF) | 29.02M | 72.58% ± 0.59% | 65.70% | 9.89% | 62.69% | 70.83% |
+| **Ohsumed** *(23 lớp)* | **`exp4_ctrl_mlp`** (MLP cân bằng tham số) | 29.02M | **73.06%** ± 0.20% | **66.73%** | **20.46%** | **64.31%** | **70.95%** |
 
-### Bảng 4 / Hình vẽ Minh họa: Phân tích Tính Giải thích (Explainability Analysis)
-Để chứng minh bạn đã giải quyết triệt để **Limitation 2 (Explainability)** của bài báo gốc, hãy thêm 2 biểu đồ trực quan vào bài báo mới:
-1. **Biểu đồ 1 (Source Contribution Bar Chart):** Trích xuất trọng số cổng `gate_weights` $\in \mathbb{R}^7$ từ mô-đun `AG-CMF` trung bình trên tập test của từng bộ dữ liệu. Biểu đồ này sẽ cho thấy:
-   * Trên tập cảm xúc ngắn (SST-2), các tầng trung gian của LLaMA2 (như tầng $20, 24$) và RoBERTa chiếm trọng số cao nhất.
-   * Trên tập phân loại $52$ chủ đề chuyên sâu (R52), tầng sâu của LLaMA2 ($28, 32$) kết hợp CoT-Anchor đóng vai trò quyết định.
-2. **Biểu đồ 2 (Token Attention Heatmap):** Chọn $3\text{--}4$ câu mẫu từ tập SST-2 và MR, vẽ bản đồ nhiệt của trọng số chú ý $\alpha_t$ (tính từ mã nguồn Exp 2). So sánh với từ khóa "CLUES" của phương pháp CARP để chỉ ra rằng: **LLMEmbed++ tự động bắt trúng các từ khóa cảm xúc/chủ đề tương đương với CARP mà không cần sinh văn bản tốn kém!**
+**Phân tích rút ra từ Bảng 2:**
+- Trên cả hai miền độc lập (`R52` tin tức tài chính và `Ohsumed` y khoa), `Baseline #15` và `Avg+Cat` đều sụp hoàn toàn ở lớp hiếm (`Rare F1 = 0.00%`), còn `class-weighted loss` đánh đổi quá nặng `Accuracy` (`-4.38 pp` trên R52, `-7.13 pp` trên Ohsumed so với `Exp 4`).
+- Phần cải thiện chính trước `Baseline #15` đến từ việc bỏ nút thắt Gram 49 chiều / Dropout 0.5 bằng đầu phân loại giàu dung lượng có `LayerNorm + GELU + Dropout 0.2`. Riêng cơ chế **self-attention + gating (`AG-CMF`)** vượt rõ `Matched MLP` cùng 29.02M tham số trên bài toán 52 lớp cực lệch (`R52`: `+4.16 pp` Macro-F1, `+11.63 pp` Rare F1), nhưng không vượt `Matched MLP` trên bài toán 23 lớp ít cực đoan hơn (`Ohsumed`: `-1.03 pp` Macro-F1).
 
 ---
 

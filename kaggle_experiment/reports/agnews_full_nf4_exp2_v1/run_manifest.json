@@ -1,0 +1,28 @@
+{
+  "run_id": "agnews_full_nf4_exp2_v1",
+  "dataset": "agnews",
+  "experiments": [
+    "exp2"
+  ],
+  "run_mode": "full",
+  "precision": "nf4",
+  "protocol": "controlled",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "epochs": 50,
+  "limit": 0,
+  "kaggle_kernel": "hunnnee/llmembed-plusplus-agnews-exp2",
+  "kaggle_version": 1,
+  "kaggle_url": "https://www.kaggle.com/code/hunnnee/llmembed-plusplus-agnews-exp2",
+  "status": "COMPLETE",
+  "benchmark_status": "huggingface_train_test",
+  "artifacts": {
+    "metrics_csv": "metrics.csv",
+    "ablation_csv": "ablation.csv",
+    "report_notes": "report_notes.json",
+    "results": 3
+  }
+}

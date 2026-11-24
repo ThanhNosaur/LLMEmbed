@@ -68,15 +68,20 @@ LLMEmbed/
 
 ## Kết quả Thực nghiệm Đã Ghi Nhận
 
-Chi tiết đầy đủ nằm tại [`kaggle_experiment/reports/README.md`](kaggle_experiment/reports/README.md):
+Chi tiết đầy đủ (bao gồm đối chứng `FP16 + 100 epochs` và đối chứng mất cân bằng trên `R52` & `Ohsumed`) nằm tại [`kaggle_experiment/reports/README.md`](kaggle_experiment/reports/README.md):
 
 | Tập dữ liệu | Cấu hình chạy | Exp 0 | Exp 1 | Exp 2 | Exp 3 | Exp 4 (AG-CMF) | Exp 5B (LLaMA-2 + DeBERTa) | Exp 5C (Qwen2.5 + DeBERTa) |
 | :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | **R8** | NF4, controlled, 50 epochs, seeds `42/43/44` | 97.40% | 97.24% | 97.50% | 97.52% | 97.62% | **97.65%** | 97.50% |
 | **R52** | NF4, controlled, 50 epochs, seeds `42/43/44` | 90.11% | 87.97% | 89.23% | 89.82% | **95.61%** | 95.46% | 95.21% |
 | **SST-2** | NF4, controlled, 50 epochs, seeds `42/43/44` | 93.39% | 94.42% | 95.22% | **95.76%** | 94.80% | 94.50% | 95.22% |
-| **MR (IMDb proxy)** | NF4, controlled, 50 epochs, seeds `42/43/44` | *(đang chạy)* | *(đang chạy)* | *(chờ)* | **96.64%** | 96.48% | *(chờ)* | *(chờ)* |
-| **SST-2 (Author)** | FP16, author protocol, 100 epochs, seed `42` | 93.92% | — | — | — | — | — | — |
+| **MR (IMDb proxy)** | NF4, controlled, 50 epochs, seeds `42/43/44` | 95.88% | 96.20% | **96.96%** | 96.64% | 96.48% | 96.62% | 96.61% |
+| **AGNews** | NF4, controlled, 50 epochs, seeds `42/43/44` | 94.81% | 94.87% | 94.93% | **95.08%** | 95.01% | 95.01% | 94.86% |
+| **Trung bình 5 tập** | NF4, controlled, 50 epochs, seeds `42/43/44` | **94.32%** | **94.14%** | **94.77%** | **94.96%** | **95.90%** | **95.85%** | **95.88%** |
+
+**Đối chứng mạnh trên cùng embedding FP16 (100 epochs, 3 seeds):**
+- **R52 (52 lớp):** `Exp 4 (AG-CMF)` đạt **95.81% Acc / 76.94% Macro-F1 / 50.72% Rare F1**, vượt `Matched MLP` cùng 29.02M tham số (`95.56% / 72.77% / 39.09%`), `Baseline #15` (`93.22% / 49.85% / 0.00%`), `Avg+Cat` (`91.91% / 42.54% / 0.00%`) và `#15 + Class-Weighted Loss` (`91.43% / 74.09% / 54.35%`).
+- **Ohsumed (23 lớp y khoa):** `Matched MLP` (`73.06% Acc / 66.73% Macro-F1`) và `Exp 4 (AG-CMF)` (`72.58% / 65.70%`) đều vượt xa `Baseline #15` (`69.83% / 58.08%`), `Avg+Cat` (`67.66% / 50.75%`) và `#15 + Class-Weighted Loss` (`65.45% / 59.71%`).
 
 ---
 

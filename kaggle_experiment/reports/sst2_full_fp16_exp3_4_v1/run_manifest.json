@@ -1,0 +1,29 @@
+{
+  "run_id": "sst2_full_fp16_exp3_4_v1",
+  "dataset": "sst2",
+  "experiments": [
+    "exp3",
+    "exp4"
+  ],
+  "run_mode": "full",
+  "precision": "fp16",
+  "protocol": "controlled",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "epochs": 100,
+  "limit": 0,
+  "kaggle_kernel": "minletter256/llmembed-plusplus-sst2-fp16-exp3-4",
+  "kaggle_version": 1,
+  "kaggle_url": "https://www.kaggle.com/code/minletter256/llmembed-plusplus-sst2-fp16-exp3-4",
+  "status": "COMPLETE",
+  "benchmark_status": "huggingface_train_validation",
+  "artifacts": {
+    "metrics_csv": "metrics.csv",
+    "ablation_csv": "ablation.csv",
+    "report_notes": "report_notes.json",
+    "results": 6
+  }
+}

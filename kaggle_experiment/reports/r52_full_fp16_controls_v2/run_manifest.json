@@ -1,0 +1,32 @@
+{
+  "run_id": "r52_full_fp16_controls_v2",
+  "dataset": "r52",
+  "experiments": [
+    "exp3",
+    "exp4",
+    "exp4_ctrl_avgcat",
+    "exp4_ctrl_mlp",
+    "exp4_ctrl_weighted"
+  ],
+  "run_mode": "full",
+  "precision": "fp16",
+  "protocol": "controlled",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "epochs": 100,
+  "limit": 0,
+  "kaggle_kernel": "qnhuuuhihi/llmembed-plusplus-r52-fp16-controls",
+  "kaggle_version": 2,
+  "kaggle_url": "https://www.kaggle.com/code/qnhuuuhihi/llmembed-plusplus-r52-fp16-controls",
+  "status": "COMPLETE",
+  "benchmark_status": "textgcn_split_preprocessing_not_verified_against_llmembed",
+  "artifacts": {
+    "metrics_csv": "metrics.csv",
+    "ablation_csv": "ablation.csv",
+    "report_notes": "report_notes.json",
+    "results": 15
+  }
+}

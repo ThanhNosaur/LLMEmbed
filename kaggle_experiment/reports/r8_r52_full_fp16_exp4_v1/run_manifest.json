@@ -1,0 +1,28 @@
+{
+  "run_id": "r8_r52_full_fp16_exp4_v1",
+  "dataset": "r8,r52",
+  "experiments": [
+    "exp4"
+  ],
+  "run_mode": "full",
+  "precision": "fp16",
+  "protocol": "controlled",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "epochs": 100,
+  "limit": 0,
+  "kaggle_kernel": "qnhuuuhihi/llmembed-plusplus-r8-r52-fp16-exp4",
+  "kaggle_version": 1,
+  "kaggle_url": "https://www.kaggle.com/code/qnhuuuhihi/llmembed-plusplus-r8-r52-fp16-exp4",
+  "status": "COMPLETE",
+  "benchmark_status": "textgcn_split_preprocessing_not_verified_against_llmembed",
+  "artifacts": {
+    "metrics_csv": "metrics.csv",
+    "ablation_csv": "ablation.csv",
+    "report_notes": "report_notes.json",
+    "results": 6
+  }
+}

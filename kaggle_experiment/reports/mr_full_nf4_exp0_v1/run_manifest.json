@@ -1,0 +1,28 @@
+{
+  "run_id": "mr_full_nf4_exp0_v1",
+  "dataset": "mr",
+  "experiments": [
+    "exp0"
+  ],
+  "run_mode": "full",
+  "precision": "nf4",
+  "protocol": "controlled",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "epochs": 50,
+  "limit": 0,
+  "kaggle_kernel": "dngtun1/llmembed-plusplus-mr-exp0",
+  "kaggle_version": 1,
+  "kaggle_url": "https://www.kaggle.com/code/dngtun1/llmembed-plusplus-mr-exp0",
+  "status": "COMPLETE",
+  "benchmark_status": "imdb_resplit_proxy",
+  "artifacts": {
+    "metrics_csv": "metrics.csv",
+    "ablation_csv": "ablation.csv",
+    "report_notes": "report_notes.json",
+    "results": 3
+  }
+}
