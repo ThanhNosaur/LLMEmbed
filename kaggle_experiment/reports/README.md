@@ -22,7 +22,6 @@ These files contain observed metrics and run manifests. Large feature caches and
 | [SST-2 FP16 Exp 3](sst2_full_fp16_exp3_4_v1/run_manifest.json) | SST-2 | FP16, controlled, 100 epochs, seeds 42/43/44 | 95.45% | 95.45% |
 | [SST-2 FP16 Exp 4](sst2_full_fp16_exp3_4_v1/run_manifest.json) | SST-2 | FP16, controlled, 100 epochs, seeds 42/43/44 | 95.57% | 95.56% |
 | [SST-2 author baseline](sst2_author_fp16_exp0_v11/run_manifest.json) | SST-2 | FP16, author, 100 epochs, seed 42 | 93.92% | — |
-| [SST-2 smoke](sst2_smoke_llama2_v5/run_manifest.json) | SST-2 | NF4, controlled, 256 samples/split, 2 epochs, seed 42 | 52.73%–91.02% | — |
 
 ## 3. Strong Controls on Identical FP16 Embeddings (Imbalanced Classification, 100 epochs, seeds `42/43/44`)
 

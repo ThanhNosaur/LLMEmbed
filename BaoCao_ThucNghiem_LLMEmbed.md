@@ -82,24 +82,32 @@ Lượt tương thích tác giả dùng Llama-2-7B-Chat. Accuracy SST-2 của l�
 
 Mức **96,20%** trong bài gốc là trung bình trên năm bộ dữ liệu theo giao thức của tác giả. Mức **95,91%** của Exp 4 là trung bình nội bộ, với IMDb chia lại và tiền xử lý R8/R52 chưa đối chiếu đầy đủ với bài gốc. Hai con số nên đứng ở hai bảng riêng trong bản thảo bài báo. [LLMEmbed, ACL 2024, Bảng 2](https://aclanthology.org/2024.acl-long.433.pdf)
 
-## 4. Giới hạn khi diễn giải
+## 4. Đối chứng mạnh trên cùng embedding FP16 (`R52` & `Ohsumed`)
 
-- **Mẫu trùng giữa các tập.** Manifest ghi nhận văn bản trùng khớp tuyệt đối với tập train nguồn ở 132 mẫu đánh giá IMDb, 4 mẫu R8 và 6 mẫu R52. Các điểm số trên dùng toàn bộ split đã lưu. Cần tính lại metric sau khi loại mẫu trùng để đo độ nhạy.
-- **CoT và khả năng giải thích.** Exp 2 dùng prompt theo tác vụ và gộp cosine với hệ số cố định. Heatmap mô tả trọng số gộp token. Hiện chưa có phép kiểm định chuỗi suy luận hay độ tin cậy của heatmap như một lời giải thích.
-- **Văn bản dài và chi phí.** Số liệu cache IMDb cho thấy Exp 3 lưu giữ 100% token theo bộ đếm của pipeline, so với khoảng 92,54% ở Exp 0. Tổng thời gian trích xuất đã ghi giảm từ khoảng 8,9 xuống 7,1 giờ. Phép đo giữa các lượt chạy còn cần chuẩn hóa phần cứng, batch và điều kiện chạy để kết luận về tốc độ. Điện năng chưa được đo.
-- **Phạm vi kết luận.** Ba seed thay đổi khởi tạo và quá trình huấn luyện trên cùng một split. Phân tích R52 cho thấy kết quả lặp lại giữa các seed trên split đó. Cần một tập mất cân bằng độc lập để kiểm tra khả năng khái quát.
+Để tách bạch ảnh hưởng của **số tham số** (`25,89M` → `29,02M`), **mất cân bằng lớp** và **cơ chế self-attention/gating**, chúng tôi giữ cố định 100% cùng bộ embedding FP16, cùng split train/val/test, 100 epoch, 3 seed (`42/43/44`) và cùng tiêu chí chọn checkpoint theo `val_accuracy`. Nhóm tần suất lớp được chốt trước theo số mẫu train: `Rare (<10)`, `Medium (10–49)`, `Frequent (>=50)`.
 
-## 5. Hướng viết bài và việc cần chốt trong nhóm
+| Tập dữ liệu | Cấu hình | Tham số | Accuracy (%) | Macro-F1 (%) | Rare F1 (`<10`) | Medium F1 (`10–49`) | Frequent F1 (`>=50`) |
+|---|---|---:|---:|---:|---:|---:|---:|
+| **R52** *(52 lớp)* | `exp4_ctrl_avgcat` (`Avg+Cat` #11) | 6,96M | 91,91 ± 0,08 | 42,54 | 0,00 | 52,75 | 87,62 |
+| **R52** *(52 lớp)* | `exp3` (Baseline #15) | 25,89M | 93,22 ± 0,04 | 49,85 | 0,00 | 68,54 | 90,34 |
+| **R52** *(52 lớp)* | `exp4_ctrl_weighted` (#15 + Weighted Loss) | 25,89M | 91,43 ± 0,38 | 74,09 | **54,35** | 83,41 | 86,61 |
+| **R52** *(52 lớp)* | `exp4_ctrl_mlp` (MLP cân bằng tham số) | 29,02M | 95,56 ± 0,04 | 72,77 | 39,09 | 89,59 | **92,47** |
+| **R52** *(52 lớp)* | **`exp4` (AG-CMF)** | 29,02M | **95,81 ± 0,21** | **76,94** | 50,72 | **90,43** | 91,53 |
+| **Ohsumed** *(23 lớp)* | `exp4_ctrl_avgcat` (`Avg+Cat` #11) | 6,96M | 67,66 ± 2,07 | 50,75 | 0,00 | 29,91 | 63,86 |
+| **Ohsumed** *(23 lớp)* | `exp3` (Baseline #15) | 25,89M | 69,83 ± 0,56 | 58,08 | 0,00 | 48,37 | 66,48 |
+| **Ohsumed** *(23 lớp)* | `exp4_ctrl_weighted` (#15 + Weighted Loss) | 25,89M | 65,45 ± 0,35 | 59,71 | 11,99 | 57,77 | 63,79 |
+| **Ohsumed** *(23 lớp)* | `exp4` (AG-CMF) | 29,02M | 72,58 ± 0,59 | 65,70 | 9,89 | 62,69 | 70,83 |
+| **Ohsumed** *(23 lớp)* | **`exp4_ctrl_mlp`** (MLP cân bằng tham số) | 29,02M | **73,06 ± 0,20** | **66,73** | **20,46** | **64,31** | **70,95** |
 
-Câu hỏi nghiên cứu đề xuất là **khi nào hợp nhất embedding thích nghi cải thiện khả năng phân loại các lớp ít mẫu?** R52 là kết quả trung tâm. SST-2, IMDb, AGNews và R8 cho thấy hiệu quả thay đổi theo bộ dữ liệu. Các nghiên cứu trước đã khảo sát hợp nhất embedding đa mô hình và cách chọn tầng, nên phần khác biệt cần làm rõ là kết quả trên lớp ít mẫu dưới các đối chứng đủ mạnh. [Gwak & Jung, ACL 2026](https://aclanthology.org/2026.acl-long.1786/)
+- **Điểm nhất quán trên cả 2 miền độc lập (`R52` tài chính & `Ohsumed` y khoa):** `Baseline #15` và `Avg+Cat` đều sụp hoàn toàn ở lớp hiếm (`Rare F1 = 0,00%`), còn `weighted loss` đánh đổi mạnh `Accuracy` (`-4,38` đến `-7,13` điểm %) mà vẫn thua `Macro-F1`.
+- **Tách bạch đóng góp:** Phần lớn bước nhảy vượt `#15` đến từ việc bỏ nút thắt cổ chai 49 chiều + Dropout 0,5 bằng đầu hợp nhất giàu dung lượng có `LayerNorm + GELU + Dropout 0,2` (cả `Exp 4` và `Matched MLP` đều đạt được). Riêng cơ chế **self-attention + gating (`AG-CMF`)** vượt rõ `Matched MLP` trên bài toán 52 lớp cực lệch (`R52`: `+4,16` điểm % Macro-F1, `+11,63` điểm % Rare F1), nhưng không vượt `Matched MLP` trên `Ohsumed` 23 lớp (`-1,03` điểm % Macro-F1).
 
-1. **Chạy đối chứng trên cache Exp 3 của R52.** So sánh Exp 4 với `Avg + Cat`, một MLP có số tham số gần tương đương và một baseline dùng weighted cross-entropy. Dùng cùng split và seed. Nếu Exp 4 vẫn dẫn, thử bỏ gate và self-attention lần lượt để xác định thành phần có đóng góp.
-2. **Kiểm tra độ bền của kết quả.** Tính lại accuracy và macro-F1 sau khi lọc mẫu trùng. Báo cáo kết quả theo nhóm tần suất lớp dựa trên số mẫu train và xác nhận trên một bộ dữ liệu mất cân bằng độc lập.
-3. **Chốt phạm vi bản thảo.** Đưa phân tích R52 lên phần chính, giữ ma trận năm tập để mô tả phạm vi kết quả và đưa FP16 vào phần đối chiếu bổ sung. Với đối chứng và xác nhận độc lập, có thể phát triển thành một bài báo thực nghiệm ngắn hoặc bài workshop.
+## 5. Giới hạn khi diễn giải & Phạm vi kết luận
+
+- **Phạm vi đóng góp:** Bài viết tập trung vào phân tích nút thắt fusion trên dữ liệu mất cân bằng và điều kiện mà fusion thích nghi (`AG-CMF`) vượt MLP cùng tham số (`R52` cực lệch), không tuyên bố suy luận CoT thực thụ, giải thích nhân quả, SOTA toàn diện hay tiết kiệm điện năng.
+- **Mẫu trùng & nguồn dữ liệu:** Manifest ghi nhận mẫu văn bản trùng khớp giữa train/test nguồn ở IMDb (132), R8 (4), R52 (6). IMDb là proxy 40k/10k cho MR; R8, R52, Ohsumed dùng split TextGCN.
 
 ## Nguồn số liệu
 
-- Các bảng SST-2, R8, R52 và IMDb Exp 3–4 lấy từ [kho báo cáo Kaggle](kaggle_experiment/reports/README.md) và các CSV trong những thư mục chạy tương ứng.
-- AGNews, các cấu hình IMDb còn lại và các lượt FP16 controlled được tổng hợp từ `tmp/results_dl/`, bằng các tệp `llmembed_runs/full/metrics.csv` và `environment.json`.
-- Phân tích R52 tính từ `predictions.csv` trong `kaggle_experiment/runs/archive/r52/full_nf4_v7/`. Bảng FP16 tương thích tác giả lấy từ [manifest của lượt chạy SST-2](kaggle_experiment/reports/sst2_author_fp16_exp0_v11/run_manifest.json).
-- Mô tả cấu hình đối chiếu với [mã điều phối thí nghiệm](kaggle_experiment/llmembed/run.py), [mã fusion và chunk pooling](kaggle_experiment/llmembed/models.py) và [bài LLMEmbed gốc](https://aclanthology.org/2024.acl-long.433/).
+- Toàn bộ kết quả 35/35 NF4, FP16 và đối chứng `R52`/`Ohsumed` đã được lưu trữ đầy đủ tại [kaggle_experiment/reports/README.md](kaggle_experiment/reports/README.md) và các thư mục `run_manifest.json` / `ablation.csv` / `metrics.csv` tương ứng.
+- Mã nguồn điều phối & mô hình: [run.py](kaggle_experiment/llmembed/run.py), [models.py](kaggle_experiment/llmembed/models.py), [train.py](kaggle_experiment/llmembed/train.py) và bài gốc [LLMEmbed (ACL 2024)](https://aclanthology.org/2024.acl-long.433/).
