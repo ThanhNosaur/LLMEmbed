@@ -45,16 +45,10 @@ Các ô theo từng bộ dữ liệu là **trung bình ± độ lệch chuẩn m
 | Cấu hình | SST-2 | IMDb proxy | AGNews | R8 | R52 | TB 5 tập |
 |---|---:|---:|---:|---:|---:|---:|
 | Exp 0 | 93,39 ± 0,24 | 95,88 ± 0,08 | 94,81 ± 0,09 | 97,40 ± 0,12 | 90,11 ± 0,12 | 94,32 |
-| Exp 1 | 94,42 ± 0,24 | 96,20 ± 0,11 | 94,87 ± 0,09 | 97,24 ± 0,07 | 87,97 ± 0,18 | 94,14 |
-| Exp 2 | 95,22 ± 0,52 | **96,96 ± 0,05** | 94,93 ± 0,02 | 97,50 ± 0,13 | 89,23 ± 0,06 | 94,77 |
-| Exp 3 | **95,76 ± 0,34** | 96,64 ± 0,02 | **95,08 ± 0,08** | 97,52 ± 0,11 | 89,82 ± 0,22 | 94,96 |
-| Exp 4 | 94,80 ± 0,65 | 96,48 ± 0,23 | 95,01 ± 0,19 | 97,62 ± 0,12 | **95,61 ± 0,16** | **95,91** |
-| Exp 5B | 94,50 ± 0,41 | 96,62 ± 0,07 | 95,01 ± 0,25 | **97,65 ± 0,11** | 95,46 ± 0,29 | 95,85 |
-| Exp 5C | 95,22 ± 0,35 | 96,61 ± 0,07 | 94,86 ± 0,05 | 97,50 ± 0,34 | 95,21 ± 0,04 | 95,88 |
+| Exp 3 | **95,76 ± 0,34** | **96,64 ± 0,02** | **95,08 ± 0,08** | 97,52 ± 0,11 | 89,82 ± 0,22 | 94,96 |
+| Exp 4 | 94,80 ± 0,65 | 96,48 ± 0,23 | 95,01 ± 0,19 | **97,62 ± 0,12** | **95,61 ± 0,16** | **95,90** |
 
-- **Exp 4 so với Exp 3.** Accuracy tăng 5,79 điểm % trên R52 và 0,11 điểm % trên R8. Accuracy giảm 0,96 điểm % trên SST-2, 0,16 trên IMDb và 0,07 trên AGNews. Delta được tính trước khi làm tròn.
-- **Exp 1 so với Exp 0.** Tầng cách quãng cải thiện SST-2 khoảng 1,03 điểm % nhưng làm R52 giảm 2,14 điểm %.
-- **Exp 5B và 5C.** Thay backbone cho kết quả gần Exp 4 khi tính trung bình năm tập. Trên R52, cả hai cấu hình đều đạt macro-F1 thấp hơn Exp 4.
+- **Exp 4 so với Exp 3.** Accuracy tăng **5,79 điểm %** trên R52 và **0,10 điểm %** trên R8; giảm nhẹ trên SST-2 (-0,96), IMDb (-0,16) và AGNews (-0,07). Các cấu hình phụ (`Exp 1`, `Exp 2`, `Exp 5B`, `Exp 5C`) đã được lược bỏ khỏi bảng chính (vẫn lưu trong lịch sử git `f83d2b7`).
 
 ### Phân tích R52
 

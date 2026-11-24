@@ -52,32 +52,29 @@ LLMEmbed/
 
 ---
 
-## Tóm tắt Lộ trình Thực nghiệm (LLMEmbed++)
+## Tóm tắt Thực nghiệm Cốt lõi
 
-| Mã thực nghiệm | Tầng LLM (sâu $\rightarrow$ nông) | Phương thức trích xuất | Xử lý văn bản dài | Kiến trúc trộn (Fusion) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Exp 0** | `32, 31, 30, 29, 28` | Văn bản thô, Masked Mean Pooling | 1 đoạn (giới hạn context) | Bảng 1 #15 (`Cat+Co+Avg+Cat`) |
-| **Exp 1** | `32, 28, 24, 20, 16` | Văn bản thô, Strided Multi-Depth ($s=4$) | Như Exp 0 | Bảng 1 #15 |
-| **Exp 2** | `32, 28, 24, 20, 16` | Single-Pass CoT Prompt + Anchor/Cosine Pooling | 1 đoạn (giữ nguyên hậu tố prompt) | Bảng 1 #15 |
-| **Exp 3** | `32, 28, 24, 20, 16` | Như Exp 2 | Cửa sổ trượt (Sliding Windows) + Learned Chunk Attention | Bảng 1 #15 |
-| **Exp 4 (5A)** | `32, 28, 24, 20, 16` | Như Exp 3 | Như Exp 3 | **AG-CMF** (Adaptive Gated Cross-Model Fusion) |
-| **Exp 5B** | LLaMA-2 như Exp 4 | Thay BERT bằng DeBERTa-v3-large | Như Exp 3 | **AG-CMF** |
-| **Exp 5C** | Qwen2.5-7B: `28, 24, 20, 16, 12` | Qwen2.5-7B + DeBERTa-v3-large + RoBERTa-large | Như Exp 3 | **AG-CMF** |
+| Mã thực nghiệm | Mô tả ngắn |
+| :--- | :--- |
+| **Exp 0** | Baseline nội bộ theo LLMEmbed (`#15 Cat+Co+Avg+Cat`, 5 tầng cuối `32..28`) |
+| **Exp 3** | Trích xuất cách quãng + CoT prompt + Chunking + đầu trộn `#15` |
+| **Exp 4 (`AG-CMF`)** | Giữ nguyên embedding của Exp 3, thay đầu trộn bằng **Adaptive Gated Cross-Model Fusion** (~29.02M tham số) |
+| **Đối chứng mạnh (FP16)** | So sánh `Exp 4` trên cùng 100% embedding với `Avg+Cat` (`#11`), `Matched MLP` (~29.02M), và `#15 + Class-Weighted Loss` trên `R52` & `Ohsumed` |
 
 ---
 
-## Kết quả Thực nghiệm Đã Ghi Nhận
+## Kết quả Thực nghiệm Cốt lõi
 
-Chi tiết đầy đủ (bao gồm đối chứng `FP16 + 100 epochs` và đối chứng mất cân bằng trên `R52` & `Ohsumed`) nằm tại [`kaggle_experiment/reports/README.md`](kaggle_experiment/reports/README.md):
+Chi tiết đầy đủ nằm tại [`BaoCao_ThucNghiem_LLMEmbed.md`](BaoCao_ThucNghiem_LLMEmbed.md) và [`kaggle_experiment/reports/README.md`](kaggle_experiment/reports/README.md):
 
-| Tập dữ liệu | Cấu hình chạy | Exp 0 | Exp 1 | Exp 2 | Exp 3 | Exp 4 (AG-CMF) | Exp 5B (LLaMA-2 + DeBERTa) | Exp 5C (Qwen2.5 + DeBERTa) |
-| :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| **R8** | NF4, controlled, 50 epochs, seeds `42/43/44` | 97.40% | 97.24% | 97.50% | 97.52% | 97.62% | **97.65%** | 97.50% |
-| **R52** | NF4, controlled, 50 epochs, seeds `42/43/44` | 90.11% | 87.97% | 89.23% | 89.82% | **95.61%** | 95.46% | 95.21% |
-| **SST-2** | NF4, controlled, 50 epochs, seeds `42/43/44` | 93.39% | 94.42% | 95.22% | **95.76%** | 94.80% | 94.50% | 95.22% |
-| **MR (IMDb proxy)** | NF4, controlled, 50 epochs, seeds `42/43/44` | 95.88% | 96.20% | **96.96%** | 96.64% | 96.48% | 96.62% | 96.61% |
-| **AGNews** | NF4, controlled, 50 epochs, seeds `42/43/44` | 94.81% | 94.87% | 94.93% | **95.08%** | 95.01% | 95.01% | 94.86% |
-| **Trung bình 5 tập** | NF4, controlled, 50 epochs, seeds `42/43/44` | **94.32%** | **94.14%** | **94.77%** | **94.96%** | **95.90%** | **95.85%** | **95.88%** |
+| Tập dữ liệu | Cấu hình | Exp 0 *(Baseline)* | Exp 3 | Exp 4 *(AG-CMF)* | $\Delta$ (Exp 4 vs Exp 3) |
+| :--- | :--- | ---: | ---: | ---: | ---: |
+| **R8** | NF4, controlled, 50 ep, 3 seeds | 97.40% | 97.52% | **97.62%** | +0.10 pp |
+| **R52** | NF4, controlled, 50 ep, 3 seeds | 90.11% | 89.82% | **95.61%** | **+5.79 pp** |
+| **SST-2** | NF4, controlled, 50 ep, 3 seeds | 93.39% | **95.76%** | 94.80% | -0.96 pp |
+| **MR (IMDb proxy)** | NF4, controlled, 50 ep, 3 seeds | 95.88% | **96.64%** | 96.48% | -0.16 pp |
+| **AGNews** | NF4, controlled, 50 ep, 3 seeds | 94.81% | **95.08%** | 95.01% | -0.07 pp |
+| **Trung bình 5 tập** | NF4, controlled, 50 ep, 3 seeds | **94.32%** | **94.96%** | **95.90%** | **+0.94 pp** |
 
 **Đối chứng mạnh trên cùng embedding FP16 (100 epochs, 3 seeds):**
 - **R52 (52 lớp):** `Exp 4 (AG-CMF)` đạt **95.81% Acc / 76.94% Macro-F1 / 50.72% Rare F1**, vượt `Matched MLP` cùng 29.02M tham số (`95.56% / 72.77% / 39.09%`), `Baseline #15` (`93.22% / 49.85% / 0.00%`), `Avg+Cat` (`91.91% / 42.54% / 0.00%`) và `#15 + Class-Weighted Loss` (`91.43% / 74.09% / 54.35%`).

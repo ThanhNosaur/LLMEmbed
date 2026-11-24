@@ -305,17 +305,13 @@ class AdaptiveGatedCrossModelFusion(nn.Module):
 
 Toàn bộ số liệu dưới đây là **kết quả đo thực tế** trên Kaggle GPU (`Tesla T4 × 2`), trung bình qua **3 seeds (`42, 43, 44`)** (chi tiết tại `kaggle_experiment/reports/README.md`).
 
-### Bảng 1: Ablation Study Đầy Đủ 35/35 (`NF4`, `controlled`, 50 epochs, 3 seeds)
+### Bảng 1: Thực Nghiệm Cốt Lõi trên 5 Tập Chuẩn (`NF4`, `controlled`, 50 epochs, 3 seeds)
 
 | ID | Cấu hình Thực nghiệm | SST-2 | MR *(IMDb proxy)* | AGNews | R8 | R52 | Avg. 5 tập | $\Delta$ vs Exp 0 |
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Exp 0** | Baseline NF4 ($\{28..32\}$, Mean Pool, `#15`) | 93.39% | 95.88% | 94.81% | 97.40% | 90.11% | 94.32% | — |
-| **Exp 1** | $+$ Strided Multi-Depth ($\{16, 20, 24, 28, 32\}$) | 94.42% | 96.20% | 94.87% | 97.24% | 87.97% | 94.14% | -0.18 pp |
-| **Exp 2** | $+$ CoT Prompt & Cosine Anchor Pooling | 95.22% | **96.96%** | 94.93% | 97.50% | 89.23% | 94.77% | +0.45 pp |
-| **Exp 3** | $+$ Hierarchical Chunking + Learned ChunkPool | **95.76%** | 96.64% | **95.08%** | 97.52% | 89.82% | 94.96% | +0.64 pp |
-| **Exp 4** | $+$ Adaptive Gated Cross-Model Fusion (`AG-CMF`) | 94.80% | 96.48% | 95.01% | 97.62% | **95.61%** | **95.90%** | **+1.58 pp** |
-| **Exp 5B** | `AG-CMF` + DeBERTa-v3-large (thay BERT) | 94.50% | 96.62% | 95.01% | **97.65%** | 95.46% | 95.85% | +1.53 pp |
-| **Exp 5C** | `AG-CMF` + Qwen2.5-7B + DeBERTa-v3-large | 95.22% | 96.61% | 94.86% | 97.50% | 95.21% | 95.88% | +1.56 pp |
+| **Exp 3** | Strided + CoT Prompt + Chunking + `#15` | **95.76%** | **96.64%** | **95.08%** | 97.52% | 89.82% | 94.96% | +0.64 pp |
+| **Exp 4** | Giữ embedding Exp 3 + `AG-CMF` | 94.80% | 96.48% | 95.01% | **97.62%** | **95.61%** | **95.90%** | **+1.58 pp** |
 
 *(Tham chiếu: bài báo LLMEmbed ACL 2024 báo cáo cấu hình #15 trên A100 FP16, 100 epochs đạt SST-2 `95.76%`, MR gốc `95.49%`, AGNews `95.83%`, R8 `98.22%`, R52 `95.68%`, trung bình `96.20%`. Chạy lại bản `FP16 + 100 epochs` của `Exp 4` trên T4 đạt R52 **`95.81%`** (+0.13 pp vs bài báo), R8 `97.61%`, SST-2 `95.57%`.)*
 
